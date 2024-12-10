@@ -1,166 +1,153 @@
+// Game canvas setup
+const gameContainer = document.querySelector('.game-container');
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 800;
-canvas.height = 400;
-document.body.appendChild(canvas);
+canvas.height = 600;
 
-const player = {
-    x: 50,
-    y: 300,
-    width: 30,
-    height: 30,
+// Game variables
+let gameStarted = false;
+let score = 0;
+let player = {
+    x: 100,
+    y: 500,
+    width: 40,
+    height: 40,
     jumping: false,
-    velocityY: 0
+    jumpPower: -15,
+    velocity: 0,
+    gravity: 0.8
 };
 
-const obstacles = [];
-let score = 0;
-let gameOver = false;
-
-const gravity = 0.8;
-const jumpForce = -15;
+let obstacles = [];
 const obstacleSpeed = 5;
 
-function createObstacle() {
-    const height = Math.random() * 100 + 50; // Random height between 50-150
-    obstacles.push({
-        x: canvas.width,
-        y: canvas.height - height,
-        width: 30,
-        height: height
+// Create start screen
+const startScreen = document.createElement('div');
+startScreen.style.position = 'absolute';
+startScreen.style.width = '100%';
+startScreen.style.height = '100%';
+startScreen.style.display = 'flex';
+startScreen.style.flexDirection = 'column';
+startScreen.style.justifyContent = 'center';
+startScreen.style.alignItems = 'center';
+startScreen.style.background = 'rgba(0, 0, 0, 0.8)';
+startScreen.style.color = 'white';
+startScreen.innerHTML = `
+    <h1 style="font-size: 48px; margin-bottom: 20px;">Jake's Block Game</h1>
+    <button style="padding: 15px 30px; font-size: 20px; cursor: pointer; background: #4CAF50; border: none; color: white; border-radius: 5px;">Start Game</button>
+`;
+
+// Add elements to container
+gameContainer.appendChild(canvas);
+gameContainer.appendChild(startScreen);
+
+// Event listeners
+startScreen.querySelector('button').addEventListener('click', startGame);
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !player.jumping && gameStarted) {
+        player.jumping = true;
+        player.velocity = player.jumpPower;
+    }
+});
+
+function startGame() {
+    gameStarted = true;
+    startScreen.style.display = 'none';
+    requestAnimationFrame(gameLoop);
+    spawnObstacle();
+}
+
+function spawnObstacle() {
+    if (gameStarted) {
+        obstacles.push({
+            x: canvas.width,
+            y: 500,
+            width: 30,
+            height: 40
+        });
+        setTimeout(spawnObstacle, Math.random() * 1000 + 1500);
+    }
+}
+
+function drawPlayer() {
+    ctx.fillStyle = '#4CAF50';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function drawObstacles() {
+    ctx.fillStyle = '#FF4444';
+    obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     });
 }
 
-function update() {
-    if (gameOver) return;
+function drawScore() {
+    ctx.fillStyle = 'white';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Score: ${score}`, 20, 40);
+}
 
-    // Player physics
+function updatePlayer() {
     if (player.jumping) {
-        player.velocityY += gravity;
-        player.y += player.velocityY;
+        player.velocity += player.gravity;
+        player.y += player.velocity;
 
-        if (player.y >= 300) { // Ground level
-            player.y = 300;
+        if (player.y >= 500) {
+            player.y = 500;
             player.jumping = false;
-            player.velocityY = 0;
+            player.velocity = 0;
         }
     }
+}
 
-    // Obstacle movement
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= obstacleSpeed;
-
+function updateObstacles() {
+    obstacles.forEach((obstacle, index) => {
+        obstacle.x -= obstacleSpeed;
+        
         // Remove off-screen obstacles
-        if (obstacles[i].x + obstacles[i].width < 0) {
-            obstacles.splice(i, 1);
+        if (obstacle.x + obstacle.width < 0) {
+            obstacles.splice(index, 1);
             score++;
         }
 
         // Collision detection
-        if (checkCollision(player, obstacles[i])) {
-            gameOver = true;
+        if (player.x < obstacle.x + obstacle.width &&
+            player.x + player.width > obstacle.x &&
+            player.y < obstacle.y + obstacle.height &&
+            player.y + player.height > obstacle.y) {
+            gameOver();
         }
-    }
-
-    // Create new obstacles
-    if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - 300) {
-        createObstacle();
-    }
-}
-
-function checkCollision(rect1, rect2) {
-    return rect1.x < rect2.x + rect2.width &&
-           rect1.x + rect1.width > rect2.x &&
-           rect1.y < rect2.y + rect2.height &&
-           rect1.y + rect1.height > rect2.y;
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw ground
-    ctx.fillStyle = '#333';
-    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
-
-    // Draw player
-    ctx.fillStyle = '#00f';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-
-    // Draw obstacles
-    ctx.fillStyle = '#f00';
-    obstacles.forEach(obstacle => {
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     });
+}
 
-    // Draw score
-    ctx.fillStyle = '#000';
-    ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${score}`, 10, 30);
+function gameOver() {
+    gameStarted = false;
+    obstacles = [];
+    score = 0;
+    player.y = 500;
+    player.jumping = false;
+    player.velocity = 0;
+    startScreen.style.display = 'flex';
+}
 
-    if (gameOver) {
-        ctx.fillStyle = '#000';
-        ctx.font = '40px Arial';
-        ctx.fillText('Game Over!', canvas.width/2 - 100, canvas.height/2);
-    }
+function drawGround() {
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, 540, canvas.width, 60);
 }
 
 function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
+    if (gameStarted) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawGround();
+        updatePlayer();
+        updateObstacles();
+        drawPlayer();
+        drawObstacles();
+        drawScore();
+        
+        requestAnimationFrame(gameLoop);
+    }
 }
 
-// Event listeners
-document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space' && !player.jumping) {
-        player.jumping = true;
-        player.velocityY = jumpForce;
-    }
-});
-
-// Start game
-gameLoop();
-// Create start screen elements
-const startScreen = document.createElement('div');
-startScreen.id = 'startScreen';
-startScreen.className = 'start-screen';
-
-const title = document.createElement('h1');
-title.className = 'game-title';
-title.textContent = 'Block Game';
-
-const instructions = document.createElement('div');
-instructions.className = 'instructions';
-instructions.innerHTML = `
-    <p>Press SPACE to jump</p>
-    <p>Avoid the red blocks</p>
-    <p>See how far you can go!</p>
-`;
-
-const startButton = document.createElement('button');
-startButton.className = 'start-button';
-startButton.textContent = 'Start Game';
-
-const highScoreDisplay = document.createElement('div');
-highScoreDisplay.className = 'high-score';
-highScoreDisplay.textContent = `High Score: ${localStorage.getItem('highScore') || 0}`;
-
-startScreen.appendChild(title);
-startScreen.appendChild(instructions);
-startScreen.appendChild(startButton);
-startScreen.appendChild(highScoreDisplay);
-
-document.querySelector('.game-container').appendChild(startScreen);
-
-// Hide canvas initially
-canvas.style.display = 'none';
-
-// Start button click handler
-startButton.addEventListener('click', () => {
-    startScreen.style.display = 'none';
-    canvas.style.display = 'block';
-    gameLoop();
-});
-
-// Stop the game loop initially
-cancelAnimationFrame(gameLoop);
