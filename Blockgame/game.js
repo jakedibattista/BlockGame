@@ -1,157 +1,112 @@
-class Game {
-    constructor() {
-        // Simplified canvas setup
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = 400;  // Reduced canvas size
-        this.canvas.height = 400;
-        this.ctx = this.canvas.getContext('2d');
-        document.body.appendChild(this.canvas);  // Direct append to body
-        
-        // Simplified paddle
-        this.paddle = {
-            width: 60,
-            height: 10,
-            x: 170,
-            y: 350
-        };
-        
-        // Simplified ball
-        this.ball = {
-            x: 200,
-            y: 200,
-            radius: 5,
-            dx: 3,
-            dy: -3
-        };
-        
-        // Simplified blocks
-        this.blocks = [];
-        this.blockRows = 3;  // Fewer rows
-        this.blockCols = 5;  // Fewer columns
-        
-        this.score = 0;
-        this.gameActive = true;
-        
-        // Initialize and start immediately
-        this.createBlocks();
-        this.setupEventListeners();
-        this.gameLoop();
-    }
-    
-    createBlocks() {
-        for(let i = 0; i < this.blockRows; i++) {
-            for(let j = 0; j < this.blockCols; j++) {
-                this.blocks.push({
-                    x: j * 70 + 30,
-                    y: i * 30 + 30,
-                    width: 60,
-                    height: 15,
-                    active: true
-                });
-            }
-        }
-    }
-    
-    setupEventListeners() {
-        document.addEventListener('mousemove', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            
-            // Keep paddle within canvas bounds
-            if(mouseX >= 0 && mouseX <= this.canvas.width - this.paddle.width) {
-                this.paddle.x = mouseX;
-            }
-        });
-    }
-    
-    update() {
-        // Move ball
-        this.ball.x += this.ball.dx;
-        this.ball.y += this.ball.dy;
-        
-        // Ball collision with walls
-        if(this.ball.x + this.ball.radius > this.canvas.width || this.ball.x - this.ball.radius < 0) {
-            this.ball.dx *= -1;
-        }
-        if(this.ball.y - this.ball.radius < 0) {
-            this.ball.dy *= -1;
-        }
-        
-        // Ball collision with paddle
-        if(this.ball.y + this.ball.radius > this.paddle.y &&
-           this.ball.x > this.paddle.x &&
-           this.ball.x < this.paddle.x + this.paddle.width) {
-            this.ball.dy *= -1;
-        }
-        
-        // Ball collision with blocks
-        this.blocks.forEach(block => {
-            if(block.active &&
-               this.ball.x > block.x &&
-               this.ball.x < block.x + block.width &&
-               this.ball.y > block.y &&
-               this.ball.y < block.y + block.height) {
-                block.active = false;
-                this.ball.dy *= -1;
-                this.score += 10;
-            }
-        });
-        
-        // Game over condition
-        if(this.ball.y + this.ball.radius > this.canvas.height) {
-            this.gameActive = false;
-            this.showGameOver();
-        }
-    }
-    
-    draw() {
-        // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Draw paddle
-        this.ctx.fillStyle = '#4CAF50';
-        this.ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.width, this.paddle.height);
-        
-        // Draw ball
-        this.ctx.beginPath();
-        this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#4CAF50';
-        this.ctx.fill();
-        this.ctx.closePath();
-        
-        // Draw blocks
-        this.blocks.forEach(block => {
-            if(block.active) {
-                this.ctx.fillStyle = '#4CAF50';
-                this.ctx.fillRect(block.x, block.y, block.width, block.height);
-            }
-        });
-        
-        // Draw score
-        this.ctx.fillStyle = '#000';
-        this.ctx.font = '20px Arial';
-        this.ctx.fillText(`Score: ${this.score}`, 20, 30);
-    }
-    
-    gameLoop() {
-        if(this.gameActive) {
-            this.update();
-            this.draw();
-            requestAnimationFrame(() => this.gameLoop());
-        }
-    }
-    
-    showGameOver() {
-        const gameOver = document.createElement('div');
-        gameOver.className = 'start-screen';
-        gameOver.innerHTML = `
-            <h1>Game Over</h1>
-            <p>Final Score: ${this.score}</p>
-            <button onclick="location.reload()">Play Again</button>
-        `;
-        document.body.appendChild(gameOver);
-    }
-}
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Remove the test message if it exists
+    const container = document.querySelector('.game-container');
+    container.innerHTML = `
+        <div class="start-screen" id="startScreen">
+            <h1>Mario-style Platform Game</h1>
+            <button id="startButton">Start Game</button>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600" style="display: none;"></canvas>
+    `;
 
-// Start game immediately
-new Game();
+    // Get DOM elements
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Game constants
+    const GRAVITY = 0.5;
+    const JUMP_FORCE = -12;
+    const MOVEMENT_SPEED = 5;
+
+    // Player object
+    const player = {
+        x: 50,
+        y: canvas.height - 100,
+        width: 32,
+        height: 48,
+        velocityX: 0,
+        velocityY: 0,
+        isJumping: false
+    };
+
+    // Game state
+    let gameLoop;
+    let keys = {};
+
+    // Handle keyboard input
+    document.addEventListener('keydown', (e) => {
+        keys[e.key] = true;
+    });
+
+    document.addEventListener('keyup', (e) => {
+        keys[e.key] = false;
+    });
+
+    function updateGame() {
+        // Player movement
+        if (keys['ArrowRight']) {
+            player.velocityX = MOVEMENT_SPEED;
+        } else if (keys['ArrowLeft']) {
+            player.velocityX = -MOVEMENT_SPEED;
+        } else {
+            player.velocityX = 0;
+        }
+
+        // Jumping
+        if (keys[' '] && !player.isJumping) {
+            player.velocityY = JUMP_FORCE;
+            player.isJumping = true;
+        }
+
+        // Apply gravity
+        player.velocityY += GRAVITY;
+
+        // Update position
+        player.x += player.velocityX;
+        player.y += player.velocityY;
+
+        // Basic ground collision
+        if (player.y > canvas.height - player.height) {
+            player.y = canvas.height - player.height;
+            player.velocityY = 0;
+            player.isJumping = false;
+        }
+
+        // Keep player in bounds
+        if (player.x < 0) player.x = 0;
+        if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+    }
+
+    function drawGame() {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw player (simple rectangle for now)
+        ctx.fillStyle = 'red';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        // Draw ground
+        ctx.fillStyle = 'green';
+        ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+    }
+
+    function gameLoop() {
+        updateGame();
+        drawGame();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Add click handler for the start button
+    startButton.addEventListener('click', () => {
+        startScreen.style.display = 'none';
+        canvas.style.display = 'block';
+        gameLoop();
+    });
+});
+
+
+
+
