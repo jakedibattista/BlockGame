@@ -1,10 +1,12 @@
 class Game {
     constructor() {
+        console.log("Game constructor called");
         this.gameContainer = document.querySelector('.game-container');
         this.canvas = document.createElement('canvas');
         this.canvas.width = 800;
         this.canvas.height = 600;
         this.ctx = this.canvas.getContext('2d');
+        console.log("Canvas created");
         
         // Game objects
         this.paddle = {
@@ -39,6 +41,7 @@ class Game {
     }
     
     createStartScreen() {
+        console.log("Creating start screen");
         const startScreen = document.createElement('div');
         startScreen.className = 'start-screen';
         
@@ -174,3 +177,4 @@ class Game {
 
 // Start the game when the page loads
 window.onload = () => new Game();
+
