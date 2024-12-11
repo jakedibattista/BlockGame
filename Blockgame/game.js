@@ -1,66 +1,51 @@
 class Game {
     constructor() {
-        console.log("Game constructor called");
-        this.gameContainer = document.querySelector('.game-container');
+        // Simplified canvas setup
         this.canvas = document.createElement('canvas');
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        this.canvas.width = 400;  // Reduced canvas size
+        this.canvas.height = 400;
         this.ctx = this.canvas.getContext('2d');
-        console.log("Canvas created");
+        document.body.appendChild(this.canvas);  // Direct append to body
         
-        // Game objects
+        // Simplified paddle
         this.paddle = {
-            width: 100,
-            height: 20,
-            x: 350,
-            y: 550
+            width: 60,
+            height: 10,
+            x: 170,
+            y: 350
         };
         
+        // Simplified ball
         this.ball = {
-            x: 400,
-            y: 300,
-            radius: 10,
-            dx: 4,
-            dy: -4
+            x: 200,
+            y: 200,
+            radius: 5,
+            dx: 3,
+            dy: -3
         };
         
+        // Simplified blocks
         this.blocks = [];
-        this.blockRows = 5;
-        this.blockCols = 8;
+        this.blockRows = 3;  // Fewer rows
+        this.blockCols = 5;  // Fewer columns
         
-        this.gameActive = false;
         this.score = 0;
+        this.gameActive = true;
         
-        this.init();
-    }
-    
-    init() {
-        this.createStartScreen();
+        // Initialize and start immediately
         this.createBlocks();
         this.setupEventListeners();
-    }
-    
-    createStartScreen() {
-        console.log("Creating start screen");
-        const startScreen = document.createElement('div');
-        startScreen.className = 'start-screen';
-        
-        const startButton = document.createElement('button');
-        startButton.textContent = 'Start Game';
-        startButton.addEventListener('click', () => this.startGame());
-        
-        startScreen.appendChild(startButton);
-        this.gameContainer.appendChild(startScreen);
+        this.gameLoop();
     }
     
     createBlocks() {
         for(let i = 0; i < this.blockRows; i++) {
             for(let j = 0; j < this.blockCols; j++) {
                 this.blocks.push({
-                    x: j * 90 + 60,
-                    y: i * 30 + 50,
-                    width: 80,
-                    height: 20,
+                    x: j * 70 + 30,
+                    y: i * 30 + 30,
+                    width: 60,
+                    height: 15,
                     active: true
                 });
             }
@@ -77,13 +62,6 @@ class Game {
                 this.paddle.x = mouseX;
             }
         });
-    }
-    
-    startGame() {
-        this.gameContainer.innerHTML = '';
-        this.gameContainer.appendChild(this.canvas);
-        this.gameActive = true;
-        this.gameLoop();
     }
     
     update() {
@@ -171,10 +149,9 @@ class Game {
             <p>Final Score: ${this.score}</p>
             <button onclick="location.reload()">Play Again</button>
         `;
-        this.gameContainer.appendChild(gameOver);
+        document.body.appendChild(gameOver);
     }
 }
 
-// Start the game when the page loads
-window.onload = () => new Game();
-
+// Start game immediately
+new Game();
