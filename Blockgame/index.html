@@ -4,46 +4,17 @@
     <meta charset="UTF-8">
     <title>Block Breaking Game</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-        
-        .game-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-
-        .start-screen {
-            text-align: center;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-
-        canvas {
-            border: 2px solid #333;
-            background-color: white;
-        }
+        /* ... keep existing styles ... */
     </style>
 </head>
 <body>
-    <div class="game-container"></div>
+    <div class="game-container">
+        <!-- Add this temporary text to verify the container is working -->
+        <h1 style="color: red;">If you see this, the container is working</h1>
+    </div>
+    
+    <!-- Add this line before the game.js to verify JavaScript is running -->
+    <script>console.log("JavaScript is working");</script>
     <script src="game.js"></script>
 </body>
 </html>
