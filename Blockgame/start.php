@@ -1,3 +1,6 @@
+<?php
+header('Content-Type: text/html');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,3 +28,7 @@
     <script src="game.js"></script>
 </body>
 </html>
+<?php
+// Add PHP closing tag
+?>
+
