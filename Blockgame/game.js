@@ -1,7 +1,14 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Remove the test message if it exists
+    // Get the container and completely replace its content
     const container = document.querySelector('.game-container');
+    if (!container) {
+        console.error('Game container not found!');
+        return;
+    }
+    
+    // Clear any existing content and set up the game elements
+    container.innerHTML = '';  // Clear the test message
     container.innerHTML = `
         <div class="start-screen" id="startScreen">
             <h1>Mario-style Platform Game</h1>
