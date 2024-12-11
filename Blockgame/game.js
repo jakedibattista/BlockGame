@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Game state
-    let gameLoop;
+    let gameLoopId;
     let keys = {};
 
     // Handle keyboard input
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameLoop() {
         updateGame();
         drawGame();
-        requestAnimationFrame(gameLoop);
+        gameLoopId = requestAnimationFrame(gameLoop);
     }
 
     // Add click handler for the start button
@@ -106,7 +106,3 @@ document.addEventListener('DOMContentLoaded', () => {
         gameLoop();
     });
 });
-
-
-
-
